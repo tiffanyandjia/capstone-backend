@@ -1,4 +1,4 @@
-# fly.toml app configuration file generated for capstone-backend-withered-glade-1119 on 2024-09-09T19:18:37-04:00
+# fly.toml app configuration file generated for capstone-backend-withered-glade-1119 on 2024-09-11T18:30:12-04:00
 #
 # See https://fly.io/docs/reference/configuration/ for information about how to use this file.
 #
@@ -9,7 +9,7 @@ primary_region = 'iad'
 [build]
 
 [http_service]
-  internal_port = 3001
+  internal_port = 3000
   force_https = true
   auto_stop_machines = 'stop'
   auto_start_machines = true
