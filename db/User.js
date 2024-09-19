@@ -46,6 +46,21 @@ const UserModel = (db) => {
             type: DataTypes.ENUM("admin", "user"),
             defaultValue: "user",
         },
+        lat: {
+            type: DataTypes.FLOAT,
+        },
+        lng: {
+            type: DataTypes.FLOAT,
+        },
+        age: {
+            type: DataTypes.INTEGER,
+        },
+        image: {
+            type: DataTypes.STRING,
+            allowNull: false,
+            defaultValue:
+                "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
+        },
     });
 };
 

@@ -117,6 +117,11 @@ server.post("/login", async (req, res) => {
     }
 });
 
+server.get("/users", async (req, res) => {
+    const users = await User.findAll();
+    res.send({ users });
+});
+
 server.listen(3001, "0.0.0.0", () => {
     console.log("listening on port 3001");
 });
@@ -134,5 +139,17 @@ if (!checkForExistingUser) {
         lastName: "Hsu",
         location: "Syracuse, NY",
         age: 0,
+        lat: 43,
+        lng: -76,
+    });
+    await User.create({
+        email: "max@gmail.com",
+        password: "onetwo",
+        firstName: "Max",
+        lastName: "Matthews",
+        location: "Not Syracuse, NY",
+        age: 0,
+        lat: 43.5,
+        lng: -76.5,
     });
 }

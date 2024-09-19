@@ -11,7 +11,7 @@ import GoalModel from "./Goal.js";
 let db;
 if (process.env.DATABASE_URL === undefined) {
     console.log("Connected locally!");
-    db = new Sequelize("postgres://localhost:5432/blog", {
+    db = new Sequelize("postgres://localhost:5432/capstone", {
         logging: false,
     });
 } else {
@@ -30,7 +30,7 @@ const connectToDB = async () => {
     try {
         await db.authenticate();
         console.log("Connection has been established successfully.");
-        db.sync(); //{ alter: true }
+        await db.sync(); //{ alter: true }
     } catch (error) {
         console.error(error);
         console.error("Unable to connect to the database:");
