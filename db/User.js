@@ -9,11 +9,11 @@ const UserModel = (db) => {
         },
         firstName: {
             type: DataTypes.STRING,
-            allowNull: false,
+            allowNull: true,
         },
         lastName: {
             type: DataTypes.STRING,
-            allowNull: false,
+            allowNull: true,
         },
         email: {
             type: DataTypes.STRING,
@@ -26,20 +26,20 @@ const UserModel = (db) => {
         },
         age: {
             type: DataTypes.INTEGER,
-            allowNull: false,
+            allowNull: true,
         },
         location: {
             type: DataTypes.STRING,
-            allowNull: false,
+            allowNull: true,
         },
-        intestes: {
+        interests: {
             type: DataTypes.STRING,
-            allowNull: false,
+            allowNull: true,
             defaultValue: false,
         },
         curious: {
             type: DataTypes.STRING,
-            allowNull: false,
+            allowNull: true,
             defaultValue: false,
         },
         role: {
@@ -48,16 +48,19 @@ const UserModel = (db) => {
         },
         lat: {
             type: DataTypes.FLOAT,
+            allowNull: true,
         },
         lng: {
             type: DataTypes.FLOAT,
+            allowNull: true,
         },
         age: {
             type: DataTypes.INTEGER,
+            allowNull: true,
         },
         image: {
             type: DataTypes.STRING,
-            allowNull: false,
+            allowNull: true,
             defaultValue:
                 "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
         },

@@ -2,13 +2,46 @@ import express from "express";
 import cors from "cors";
 import { db, User, Goal } from "./db/db.js";
 import bcrypt from "bcrypt";
+import multer from "multer";
 
 const server = express();
 server.use(cors());
 server.use(express.json());
 
+const storage = multer.memoryStorage();
+const upload = multer({ storage });
+server.use(upload.single("photo"));
+
 server.get("/", (req, res) => {
     res.send({ hello: "world!" });
+});
+
+server.post("/locationforprofile", async (req, res) => {
+    console.log(req.file.size);
+    if (req.file && req.file.size > 3741490 * 5) {
+        console.log("file too big");
+        return res.send({ error: "file too big" });
+    } else {
+        console.log("create in DB");
+        await Post.create({
+            title: req.body.title,
+            content: req.body.content,
+            image: req.file?.buffer,
+            imageType: req.file?.mimetype,
+        });
+        res.send();
+    }
+});
+
+server.get("/locationforprofile:id", async (req, res) => {
+    const post = await Post.findByPk(req.params.id);
+
+    res.setHeader("Content-Type", post.imageType);
+
+    res.setHeader("Content-Disposition", `inline; filename=someImage.pdf`);
+
+    // Send the file data as a buffer
+    res.send(post.image);
 });
 
 server.post("/goalforprofile", async (req, res) => {
@@ -53,16 +86,20 @@ server.post("/nameforprofile", async (req, res) => {
     const { firstName, lastName, dataOfBirth, monthOfBirth, yearOfBirth, age } =
         req.body;
     try {
-        const name = await handleNameData(
-            firstName,
-            lastName,
-            dataOfBirth,
-            monthOfBirth,
-            yearOfBirth,
-            age
+        const newUserID = await User.update(
+            {
+                firstName,
+                lastName,
+                dataOfBirth,
+                monthOfBirth,
+                yearOfBirth,
+                age,
+            },
+            { where: { id: req.body.userID } }
         );
-        res.status(201).json(name);
+        res.status(201).json({});
     } catch (error) {
+        console.error(error);
         res.status(500).json({ error: error.message });
     }
 });
