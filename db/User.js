@@ -59,10 +59,12 @@ const UserModel = (db) => {
             allowNull: true,
         },
         image: {
+            type: DataTypes.BLOB,
+            allowNull: true,
+        },
+        imageType: {
             type: DataTypes.STRING,
             allowNull: true,
-            defaultValue:
-                "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
         },
     });
 };

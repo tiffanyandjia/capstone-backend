@@ -1,6 +1,6 @@
 import express from "express";
 import cors from "cors";
-import { db, User, Goal } from "./db/db.js";
+import { db, User, Goal, Friend } from "./db/db.js";
 import bcrypt from "bcrypt";
 import multer from "multer";
 
@@ -16,32 +16,57 @@ server.get("/", (req, res) => {
     res.send({ hello: "world!" });
 });
 
-server.post("/locationforprofile", async (req, res) => {
+server.get("/message", async (req, res) => {
+    res.send({ messages: await Message.findAll({ order: ["timestamp"] }) });
+});
+
+server.post("/chatpage", async (req, res) => {
+    console.log(req.body);
+
+    await Message.create(req.body);
+
+    res.send();
+});
+
+server.put("/chatpage", async (req, res) => {
+    const messageToEdit = await Message.findOne({ where: { id: req.body.id } });
+    console.log(messageToEdit);
+    messageToEdit.text = req.body.newMessageText;
+    await messageToEdit.save();
+    res.send({ messages: await Message.findAll({ order: ["timestamp"] }) });
+});
+
+server.put("/locationforprofile/:userID", async (req, res) => {
     console.log(req.file.size);
     if (req.file && req.file.size > 3741490 * 5) {
         console.log("file too big");
         return res.send({ error: "file too big" });
     } else {
         console.log("create in DB");
-        await Post.create({
-            title: req.body.title,
-            content: req.body.content,
-            image: req.file?.buffer,
-            imageType: req.file?.mimetype,
-        });
+        await User.update(
+            {
+                image: req.file?.buffer,
+                imageType: req.file?.mimetype,
+                lat: req.body.lat,
+                lng: req.body.lng,
+                interests: req.body.interests,
+                curiousAbout: req.body.curiousAbout,
+            },
+            { where: { id: req.params.userID } }
+        );
         res.send();
     }
 });
 
-server.get("/locationforprofile:id", async (req, res) => {
-    const post = await Post.findByPk(req.params.id);
+server.get("/imageforprofile/:id", async (req, res) => {
+    const user = await User.findByPk(req.params.id);
 
-    res.setHeader("Content-Type", post.imageType);
+    res.setHeader("Content-Type", user.imageType);
 
-    res.setHeader("Content-Disposition", `inline; filename=someImage.pdf`);
+    // res.setHeader("Content-Disposition", `inline; filename=someImage.pdf`);
 
     // Send the file data as a buffer
-    res.send(post.image);
+    res.send(user.image);
 });
 
 server.post("/goalforprofile", async (req, res) => {
@@ -72,15 +97,15 @@ server.post("/interestsforprofile", async (req, res) => {
         res.status(500).json({ error: error.message });
     }
 });
-server.post("/locationforprofile", async (req, res) => {
-    const { city, state, county } = req.body;
-    try {
-        const location = await handleLocationData(city, state, county);
-        res.status(201).json(location);
-    } catch (error) {
-        res.status(500).json({ error: error.message });
-    }
-});
+// server.post("/locationforprofile", async (req, res) => {
+//     const { city, state, county } = req.body;
+//     try {
+//         const location = await handleLocationData(city, state, county);
+//         res.status(201).json(location);
+//     } catch (error) {
+//         res.status(500).json({ error: error.message });
+//     }
+// });
 
 server.post("/nameforprofile", async (req, res) => {
     const { firstName, lastName, dataOfBirth, monthOfBirth, yearOfBirth, age } =
@@ -126,10 +151,10 @@ server.post("/signup", async (req, res) => {
 
 server.post("/login", async (req, res) => {
     const { email, password } = req.body;
+
     const user = await User.findOne({
         where: {
             email: email,
-            password: password,
         },
     });
     if (!user) {
@@ -137,26 +162,40 @@ server.post("/login", async (req, res) => {
             error: true,
             message: "No account found with that email address",
         });
-    } else if (user.password !== req.body) {
-        res.send({ error: true, message: "Incorrect password" });
     } else {
-        res.send({ success: true, userID: user });
-    }
-
-    const validPassword = bcrypt.compareSync(
-        req.body.password,
-        matchingUser.password
-    );
-    if (!validPassword) {
-        res.send({ error: true, message: "Wrong password. No soup for you." });
-    } else {
-        res.send({ error: false, userID: matchingUser.id });
+        const validPassword = bcrypt.compareSync(
+            req.body.password,
+            user.password
+        );
+        if (!validPassword) {
+            res.send({
+                error: true,
+                message: "Wrong password. No soup for you.",
+            });
+        } else {
+            res.send({ error: false, userID: user.id });
+        }
     }
 });
 
 server.get("/users", async (req, res) => {
     const users = await User.findAll();
     res.send({ users });
+});
+
+server.post("/makeConnection", async (req, res) => {
+    await Friend.create(req.body);
+    res.send();
+});
+
+server.get("/friends/:userID", async (req, res) => {
+    const friends = await Friend.findAll({
+        where: {
+            user1: req.params.userID,
+        },
+        include: User,
+    });
+    res.send({ friends });
 });
 
 server.listen(3001, "0.0.0.0", () => {
@@ -171,7 +210,7 @@ const checkForExistingUser = await User.findOne({
 if (!checkForExistingUser) {
     await User.create({
         email: "tiffany@gmail.com",
-        password: "onetwo",
+        password: bcrypt.hashSync("onetwo", 10),
         firstName: "Tiffany",
         lastName: "Hsu",
         location: "Syracuse, NY",
@@ -181,7 +220,7 @@ if (!checkForExistingUser) {
     });
     await User.create({
         email: "max@gmail.com",
-        password: "onetwo",
+        password: bcrypt.hashSync("onetwo", 10),
         firstName: "Max",
         lastName: "Matthews",
         location: "Not Syracuse, NY",
