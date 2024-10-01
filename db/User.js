@@ -35,12 +35,12 @@ const UserModel = (db) => {
         interests: {
             type: DataTypes.STRING,
             allowNull: true,
-            defaultValue: false,
+            defaultValue: "",
         },
         curious: {
             type: DataTypes.STRING,
             allowNull: true,
-            defaultValue: false,
+            defaultValue: "",
         },
         role: {
             type: DataTypes.ENUM("admin", "user"),

@@ -10,8 +10,23 @@ const MessageModel = (db) => {
         text: DataTypes.TEXT,
         outgoing: DataTypes.BOOLEAN,
         timestamp: DataTypes.DATE,
-        sentByUserID: DataTypes.INTEGER,
-        sentToUserID: DataTypes.INTEGER,
+        // sentByUserID: DataTypes.INTEGER,
+        // sentToUserID: DataTypes.INTEGER,
+        sentByUserID: {
+            type: DataTypes.INTEGER,
+            // references: {
+            //     model: User, // Establish relationship with User model
+            //     key: "id",
+            // },
+        },
+
+        sentToUserID: {
+            type: DataTypes.INTEGER,
+            // references: {
+            //     model: User, // Establish relationship with User model
+            //     key: "id",
+            // },
+        },
     });
 };
 

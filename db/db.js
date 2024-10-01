@@ -36,6 +36,8 @@ const connectToDB = async () => {
         await db.sync({ alter: true }); //alter: true
 
         Friend.belongsTo(User, { foreignKey: "user2" });
+        Message.belongsTo(User, { foreignKey: "sentByUserID", as: "sender" });
+        Message.belongsTo(User, { foreignKey: "sentToUserID", as: "receiver" });
     } catch (error) {
         console.error(error);
         console.error("Unable to connect to the database:");

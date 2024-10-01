@@ -1,8 +1,9 @@
 import express from "express";
 import cors from "cors";
-import { db, User, Goal, Friend } from "./db/db.js";
+import { db, User, Goal, Friend, Message } from "./db/db.js";
 import bcrypt from "bcrypt";
 import multer from "multer";
+import { Op } from "sequelize";
 
 const server = express();
 server.use(cors());
@@ -17,15 +18,58 @@ server.get("/", (req, res) => {
 });
 
 server.get("/message", async (req, res) => {
-    res.send({ messages: await Message.findAll({ order: ["timestamp"] }) });
+    // res.send({ messages: await Message.findAll({ order: ["timestamp"] }) });
+    const { userId } = req.query; // Get userId from the request query
+
+    const messages = await Message.findAll({
+        where: {
+            [Op.or]: [{ sentByUserID: userId }, { sentToUserID: userId }],
+        },
+        include: [
+            {
+                model: User,
+                as: "sender",
+                attributes: [
+                    "id",
+                    "firstName",
+                    "lastName",
+                    "image",
+                    "imageType",
+                ],
+            },
+            {
+                model: User,
+                as: "receiver",
+                attributes: [
+                    "id",
+                    "firstName",
+                    "lastName",
+                    "image",
+                    "imageType",
+                ],
+            },
+        ],
+        order: [["timestamp", "ASC"]],
+    });
+
+    res.send({ messages });
 });
 
-server.post("/chatpage", async (req, res) => {
-    console.log(req.body);
+server.post("/message", async (req, res) => {
+    // console.log(req.body);
+    // await Message.create(req.body);
+    // res.send();
 
-    await Message.create(req.body);
+    const { sentByUserID, sentToUserID, text, timestamp } = req.body;
 
-    res.send();
+    const newMessage = await Message.create({
+        sentByUserID,
+        text,
+        timestamp,
+        sentToUserID,
+    });
+
+    res.send({ message: newMessage });
 });
 
 server.put("/chatpage", async (req, res) => {
@@ -61,26 +105,35 @@ server.put("/locationforprofile/:userID", async (req, res) => {
 server.get("/imageforprofile/:id", async (req, res) => {
     const user = await User.findByPk(req.params.id);
 
-    res.setHeader("Content-Type", user.imageType);
+    // res.setHeader("Content-Type", user.imageType);
 
     // res.setHeader("Content-Disposition", `inline; filename=someImage.pdf`);
 
     // Send the file data as a buffer
-    res.send(user.image);
+    if (user && user.image) {
+        res.setHeader("Content-Type", user.imageType);
+        res.send(user.image);
+    } else {
+        res.status(404).send("Image not found");
+    }
+    // res.send(user.image);
 });
 
 server.post("/goalforprofile", async (req, res) => {
     const { title, category, location, startDate, endDate, goalIntention } =
         req.body;
     try {
-        const goal = await Goal.create({
-            title,
-            category,
-            location,
-            startDate,
-            endDate,
-            goalIntention,
-        });
+        const goal = await Goal.update(
+            {
+                title,
+                category,
+                location,
+                startDate,
+                endDate,
+                goalIntention,
+            },
+            { where: { id: req.body.userID } }
+        );
         res.status(201).json(goal);
     } catch (error) {
         console.error(error);
@@ -91,9 +144,14 @@ server.post("/goalforprofile", async (req, res) => {
 server.post("/interestsforprofile", async (req, res) => {
     const { insterests, curiousAbout } = req.body;
     try {
-        const interests = await handleInterestsData(insterests, curiousAbout);
+        const interests = await User.update(
+            { insterests, curiousAbout },
+            { where: { id: req.body.userID } }
+        );
+
         res.status(201).json(interests);
     } catch (error) {
+        console.error(error);
         res.status(500).json({ error: error.message });
     }
 });
@@ -184,7 +242,10 @@ server.get("/users", async (req, res) => {
 });
 
 server.post("/makeConnection", async (req, res) => {
-    await Friend.create(req.body);
+    const existingFriend = await Friend.findOne({ where: req.body });
+    if (!existingFriend) {
+        await Friend.create(req.body);
+    }
     res.send();
 });
 
