@@ -131,6 +131,7 @@ server.post("/goalforprofile", async (req, res) => {
                 startDate,
                 endDate,
                 goalIntention,
+                userId: userID,
             },
             { where: { id: req.body.userID } }
         );
@@ -138,6 +139,44 @@ server.post("/goalforprofile", async (req, res) => {
     } catch (error) {
         console.error(error);
         res.status(500).json({ error: error.message });
+    }
+});
+
+server.get("/goalforprofile/:goalId", async (req, res) => {
+    try {
+        const goal = await Goal.findByPk(req.params.goalId);
+        if (goal) {
+            res.json(goal);
+        } else {
+            res.status(404).json({ message: "Goal not found" });
+        }
+    } catch (error) {
+        console.error("Error fetching goal:", error);
+        res.status(500).json({ error: "Server error" });
+    }
+});
+
+server.put("/goalforprofile/:goalId", async (req, res) => {
+    const { title, category, location, startDate, endDate, goalIntention } =
+        req.body;
+    try {
+        const goal = await Goal.findByPk(req.params.goalId);
+        if (goal) {
+            await goal.update({
+                title,
+                category,
+                location,
+                startDate,
+                endDate,
+                goalIntention,
+            });
+            res.json({ message: "Goal updated successfully" });
+        } else {
+            res.status(404).json({ message: "Goal not found" });
+        }
+    } catch (error) {
+        console.error("Error updating goal:", error);
+        res.status(500).json({ error: "Server error" });
     }
 });
 
@@ -239,6 +278,33 @@ server.post("/login", async (req, res) => {
 server.get("/users", async (req, res) => {
     const users = await User.findAll();
     res.send({ users });
+});
+
+// Backend: API to get user profile data
+server.get("/user/:userID", async (req, res) => {
+    try {
+        const user = await User.findByPk(req.params.userID, {
+            attributes: [
+                "firstName",
+                "lastName",
+                "age",
+                "location",
+                "bio",
+                "interests",
+                "curiousAbout",
+                "profileImg",
+            ],
+        });
+
+        if (!user) {
+            return res.status(404).json({ error: "User not found" });
+        }
+
+        res.status(200).json({ user });
+    } catch (error) {
+        console.error("Error fetching user profile:", error);
+        res.status(500).json({ error: "Failed to fetch user profile" });
+    }
 });
 
 server.post("/makeConnection", async (req, res) => {
